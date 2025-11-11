@@ -31,7 +31,7 @@ const AdminSidebar = () => {
         
 
           <div className='list-group list-group-flush'>
-            <Link className='list-group-item list-group-item-action bg-dark text-white'>
+            <Link to="/manage_users" className='list-group-item list-group-item-action bg-dark text-white'>
               <FaUsers className='icon-fix'/> Reg Users
             </Link>
           </div>

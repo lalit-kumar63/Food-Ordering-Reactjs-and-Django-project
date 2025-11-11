@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import AdminLayout from '../components/AdminLayout'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { CSVLink } from 'react-csv'
 import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -9,8 +9,14 @@ const ManageFoods = () => {
 
     const [foods, setFoods] = useState([]);
     const [allFoods, setAllFoods] = useState([]);
-
+    const navigate = useNavigate();
+    const adminUser = localStorage.getItem("adminUser");
+    
     useEffect(()=>{
+        if (!adminUser) {
+            navigate("/admin-login");
+            return;
+          }
         fetch('http://127.0.0.1:8000/api/foods/')
         .then(res=>res.json())
         .then(data=> {

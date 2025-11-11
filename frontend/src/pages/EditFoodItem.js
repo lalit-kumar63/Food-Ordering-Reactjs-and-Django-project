@@ -73,12 +73,13 @@ const EditFoodItem = () => {
       e.preventDefault();
       const data = new FormData();
 
-      data.append("category", formData.category)
-      data.append("item_name", formData.item_name)
-      data.append("item_description", formData.item_description)
-      data.append("item_quantity", formData.item_quantity)
-      data.append("item_price", parseFloat(formData.item_price))
-      data.append("image", formData.image)
+      data.append("category", formData.category);
+      data.append("item_name", formData.item_name);
+      data.append("item_description", formData.item_description);
+      data.append("item_quantity", formData.item_quantity);
+      data.append("item_price", parseFloat(formData.item_price));
+      data.append("image", formData.image);
+      data.append("is_available", formData.is_available ? "true" : "false");
       
       try{
           const response = await fetch(`http://127.0.0.1:8000/api/edit-food/${id}/`, {

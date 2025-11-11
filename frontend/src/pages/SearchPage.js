@@ -42,7 +42,7 @@ const SearchPage = () => {
                                         <span className='fw-bold'>₹ {food.item_price}</span>
                                         
                                         {food.is_available ? (
-                                            <Link to="#" className='btn btn-outline-primary btn-sm'>
+                                            <Link to={`/food/${food.id}`} className='btn btn-outline-primary btn-sm'>
                                                 <i className='fas fa-shopping-basket me-1'></i>Order now
                                             </Link>
                                         ):(

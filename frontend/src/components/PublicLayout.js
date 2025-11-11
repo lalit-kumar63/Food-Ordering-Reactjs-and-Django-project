@@ -2,19 +2,51 @@ import React, {useState, useEffect } from 'react'
 import { FaCogs, FaHeart, FaHome, FaShoppingCart, FaSignInAlt, FaSignOutAlt, FaTruck, FaUser, FaUserCircle, FaUserPlus, FaUserShield, FaUtensils } from 'react-icons/fa'
 import { Link, useNavigate } from 'react-router-dom'
 import '../styles/layout.css';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
+
 const PublicLayout = ({children}) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userName, setUserName] = useState("")
 
+  const {cartCount, setCartCount} = useCart();
+  const {wishlistCount, setWishlistCount} = useWishlist();
+
   const navigate = useNavigate();
   const userId = localStorage.getItem("userId")
   const name = localStorage.getItem("userName")
- 
+
+  const fetchCartCount = async() =>{
+    if(userId){
+      try{
+        const response = await fetch(`http://127.0.0.1:8000/api/cart/${userId}/`)
+        const data = await  response.json();
+        setCartCount(data.length)
+      }
+      catch(error){
+        console.error("Error fetching cart count:", error);
+      }
+    }
+  }
+  const fetchWishlistCount = async() =>{
+    if(userId){
+      try{
+        const response = await fetch(`http://127.0.0.1:8000/api/wishlist/${userId}/`)
+        const data = await  response.json();
+        setWishlistCount(data.length)
+      }
+      catch(error){
+        console.error("Error fetching Wishlist Count:", error);
+      }
+    }
+  }
 
   useEffect(()=>{
     if(userId){
       setIsLoggedIn(true);
       setUserName(name);
+      fetchCartCount();
+      fetchWishlistCount();
     }
   },[userId, name])
  
@@ -22,6 +54,8 @@ const PublicLayout = ({children}) => {
     localStorage.removeItem('userId');
     localStorage.removeItem('userName');
     setIsLoggedIn(false);
+    setCartCount(0);
+    setWishlistCount(0);
     navigate('/login');
 
   }
@@ -40,10 +74,10 @@ const PublicLayout = ({children}) => {
                   <Link className="nav-link" to="/"><FaHome className='me-1' /> Home</Link>
                 </li>
                 <li className="nav-item mx-1">
-                  <Link className="nav-link" to="#"><FaUtensils className='me-1' /> Menu</Link>
+                  <Link className="nav-link" to="/food_menu"><FaUtensils className='me-1' /> Menu</Link>
                 </li>
                 <li className="nav-item mx-1">
-                  <Link className="nav-link" to="#"><FaTruck className='me-1' /> Track</Link>
+                  <Link className="nav-link" to="/track"><FaTruck className='me-1' /> Track</Link>
                 </li>
                 {!isLoggedIn ? (
                   <>
@@ -63,10 +97,20 @@ const PublicLayout = ({children}) => {
                       <Link className="nav-link" to="/my-orders"><FaUser className='me-1' /> My Orders</Link>
                     </li>
                     <li className="nav-item mx-1">
-                      <Link className="nav-link" to="/cart"><FaShoppingCart className='me-1' /> Carts</Link>
+                      <Link className="nav-link" to="/cart"><FaShoppingCart className='me-1' /> 
+                        Carts
+                        {cartCount > 0 && (
+                          <span className="badge bg-danger ms-1">{cartCount}</span>
+                        )}
+                      </Link>
                     </li>
                     <li className="nav-item mx-1">
-                      <Link className="nav-link" to="/admin-login"><FaHeart className='me-1' /> Wishlist</Link>
+                      <Link className="nav-link" to="/wishlist"><FaHeart className='me-1' /> 
+                        Wishlist
+                        {wishlistCount > 0 && (
+                          <span className="badge bg-danger ms-1">{wishlistCount}</span>
+                        )}
+                      </Link>
                     </li>
                     <li className="nav-item dropdown">
                       <a className="nav-link dropdown-toggle text-capitalize" id="navbarDropdown" href="/" role="button" data-bs-toggle="dropdown">

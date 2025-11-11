@@ -1,11 +1,19 @@
 import React, {useState, useEffect} from 'react'
 import PublicLayout from '../components/PublicLayout'
 import '../styles/home.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import {toast, ToastContainer} from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { useWishlist } from '../context/WishlistContext';
 
 const Home = () => {
 
   const [foods, setFoods] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
+  const {wishlistCount, setWishlistCount} = useWishlist();
+
+  const userId = localStorage.getItem('userId');
+  const navigate = useNavigate();
 
   useEffect(()=>{
              
@@ -17,8 +25,59 @@ const Home = () => {
               
   },[]);
 
+  useEffect(()=>{
+    if(userId){
+      fetch(`http://127.0.0.1:8000/api/wishlist/${userId}/`)
+      .then(res=>res.json())
+      .then(data=> {
+        const wishlistIds = data.map(item => item.food_id);
+        setWishlist(wishlistIds);
+      })
+      
+    }
+              
+  },[userId]);
+
+  const toggleWishlist = async(food_id) => {
+    if(!userId){
+      toast.info('Please login to manage your wishlist.');
+      return;
+    }
+
+    const isWishlisted = wishlist.includes(food_id);
+
+    const endpoint = isWishlisted ? 'remove' : 'add';
+
+    try{
+      const response = await fetch(`http://127.0.0.1:8000/api/wishlist/${endpoint}/`,{
+        method: 'POST',
+        headers: {'Content-Type': 'application/json',},
+        body: JSON.stringify({user_id: userId, food_id: food_id}),
+      })
+
+      if(response.ok){
+        setWishlist(prev=>isWishlisted ? prev.filter(id=>id!==food_id) : [...prev, food_id]);
+        const updateWishlistCount = await fetch(`http://127.0.0.1:8000/api/wishlist/${userId}/`)
+        const wishlistData = await  updateWishlistCount.json();
+        setWishlistCount(wishlistData.length)
+        
+        toast.success(isWishlisted ? 'Removed from wishlist Successfully.' : 'Added to wishlist Successfully.');
+      }
+      else{
+        const result = await response.json();
+        toast.error(result.message ||'Something went wrong.');
+      }
+    }
+    catch(error){
+      console.error(error);
+      toast.error('Error connecting to server.');
+      return;
+    }
+     
+  }
   return (
     <PublicLayout>
+      <ToastContainer position='top-right' autoClose={2000}/>
       <section className='hero py-5 text-center' style={{backgroundImage:"url('/images/pasta-chicken.jpg') "}}>
         <div style={{backgroundColor:"rgba(0,0,0,0.5)", padding:"40px 20px", borderRadius:"10px"}}>
           <h1 className='display-4'>Quick & Hot food, Delivered to You</h1>
@@ -45,9 +104,22 @@ const Home = () => {
                   </p>
               ) : (
                   foods.map((food, index)=>(
-                      <div className='col-md-4 mb-4'>
+                      <div key={food.id} className='col-md-4 mb-4'>
                           <div className="card hovereffect">
-                              <img src={`http://127.0.0.1:8000${food.image}`} alt='Food item'  className='card-img-top' style={{height:'180px'}}/>
+                              <div className='position-relative'>
+                                <img src={`http://127.0.0.1:8000${food.image}`} alt='Food item'  className='card-img-top' style={{height:'180px'}}/>
+                                <i
+                                  className={`${wishlist.includes(food.id) ? "fas" : "far"} fa-heart heart-anim position-absolute top-0 end-0 m-2 text-danger`}
+                                  style={{
+                                    cursor: 'pointer',
+                                    background: 'white',
+                                    fontSize: '25px',
+                                    padding: '4px',
+                                    borderRadius: '50%',
+                                  }}
+                                  onClick={() => toggleWishlist(food.id)}
+                                ></i>
+                              </div>
                               <div className='card-body'>
                                   <h5 className='card-title'>
                                       <Link to={`/food/${food.id}`}>{food.item_name}</Link>
@@ -103,7 +175,7 @@ const Home = () => {
       </section>
       <section className='py-5 bg-warning text-center text-dark'>
               <h4>Ready to Satisfy Your Hunger?</h4>
-              <Link to="" className='btn btn-dark btn-lg'>
+              <Link to="/food_menu" className='btn btn-dark btn-lg'>
               Browse Full Menu
               </Link>
       </section>

@@ -28,50 +28,65 @@ import ViewFoodOrder from './pages/ViewFoodOrder';
 import SearchOrder from './pages/SearchOrder';
 import EditCategory from './pages/EditCategory';
 import EditFoodItem from './pages/EditFoodItem';
+import ManageUser from './pages/ManageUser';
+import { CartProvider } from './context/CartContext';
+import FoodList from './pages/FoodList';
+import { WishlistProvider } from './context/WishlistContext';
+import Wishlist from './pages/Wishlist';
+import TrackOrder from './pages/TrackOrder';
 
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home/>} />
-        <Route path="/admin-login" element={<AdminLogin/>} />
-        <Route path="/admin-dashboard" element={<AdminDashboard/>} />
-        <Route path="/add-category" element={<AddCategory/>} />
-        <Route path="/manage-category" element={<ManageCategory/>} />
-        <Route path="/add-food" element={<AddFood/>} />
-        <Route path="/manage-food" element={<ManageFood/>} />
-        <Route path="/order-not-confirm" element={<OrdersNotConfirm/>} />
-        <Route path="/order-confirm" element={<OrderConfirmed/>} />
-        <Route path="/order-being-prepared" element={<FoodbeingPrepared/>} />
-        <Route path="/order-pickedup" element={<FoodPickup/>} />
-        <Route path="/order-delivered" element={<FoodDelivered/>} />
-        <Route path="/order-cancelled" element={<OrderCancelled/>} />
-        <Route path="/all-orders" element={<AllOrders/>} />
+    <WishlistProvider>
+      <CartProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Home/>} />
+            <Route path="/admin-login" element={<AdminLogin/>} />
+            <Route path="/admin-dashboard" element={<AdminDashboard/>} />
+            <Route path="/add-category" element={<AddCategory/>} />
+            <Route path="/manage-category" element={<ManageCategory/>} />
+            <Route path="/add-food" element={<AddFood/>} />
+            <Route path="/manage-food" element={<ManageFood/>} />
+            <Route path="/order-not-confirm" element={<OrdersNotConfirm/>} />
+            <Route path="/order-confirm" element={<OrderConfirmed/>} />
+            <Route path="/order-being-prepared" element={<FoodbeingPrepared/>} />
+            <Route path="/order-pickedup" element={<FoodPickup/>} />
+            <Route path="/order-delivered" element={<FoodDelivered/>} />
+            <Route path="/order-cancelled" element={<OrderCancelled/>} />
+            <Route path="/all-orders" element={<AllOrders/>} />
 
-        <Route path="/order-report" element={<OrderReport/>} />
-        <Route path="/admin-view-order-detail/:orderNumber" element={<ViewFoodOrder/>} />
-        <Route path="/search-order" element={<SearchOrder/>} />
+            <Route path="/order-report" element={<OrderReport/>} />
+            <Route path="/admin-view-order-detail/:orderNumber" element={<ViewFoodOrder/>} />
+            <Route path="/search-order" element={<SearchOrder/>} />
+            <Route path="/manage_users" element={<ManageUser/>} />
 
-
-        <Route path="/search" element={<SearchPage/>} />
-        <Route path="/register" element={<Register/>} />
-        <Route path="/login" element={<Login/>} />
-        <Route path="/food/:id" element={<FoodDetail/>} />
-        <Route path="/cart" element={<Cart/>} />
-        <Route path="/payment" element={<PaymentPage/>} />
-        <Route path="/my-orders" element={<MyOrders/>} />
-        <Route path="/order-details/:order_number" element={<OrderDetails/>} />
-        <Route path="/profile" element={<ProfilePage/>} />
-        <Route path="/change-password" element={<ChangePassword/>} />
-        <Route path="/edit_category/:id" element={<EditCategory/>} />
-        <Route path="/edit_food/:id" element={<EditFoodItem/>} />
-
-        {/* <Route path="/add-food" element={<AddFood isEdit={false}/>} />
-        <Route path="/edit_food/:id" element={<AddFood isEdit={true}/>} /> */}
-        
-      </Routes>
-    </BrowserRouter>
+            <Route path="/search" element={<SearchPage/>} />
+            <Route path="/register" element={<Register/>} />
+            <Route path="/login" element={<Login/>} />
+            <Route path="/food/:id" element={<FoodDetail/>} />
+            <Route path="/cart" element={<Cart/>} />
+            <Route path="/payment" element={<PaymentPage/>} />
+            <Route path="/my-orders" element={<MyOrders/>} />
+            <Route path="/order-details/:order_number" element={<OrderDetails/>} />
+            <Route path="/profile" element={<ProfilePage/>} />
+            <Route path="/change-password" element={<ChangePassword/>} />
+            <Route path="/edit_category/:id" element={<EditCategory/>} />
+            <Route path="/edit_food/:id" element={<EditFoodItem/>} />
+            <Route path="/food_menu" element={<FoodList/>} />
+            <Route path="/wishlist" element={<Wishlist/>} />
+            <Route path="/track" element={<TrackOrder/>} />
+            <Route path="/track-order/:order_number" element={<TrackOrder/>} />
+            
+            {/* <Route path="/add-food" element={<AddFood isEdit={false}/>} />
+            <Route path="/edit_food/:id" element={<AddFood isEdit={true}/>} /> */}
+            
+          </Routes>
+        </BrowserRouter>
+      </CartProvider>
+    </WishlistProvider>
+    
   );
 }
 

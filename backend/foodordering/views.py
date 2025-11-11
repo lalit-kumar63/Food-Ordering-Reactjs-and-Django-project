@@ -525,3 +525,262 @@ def edit_food(request, id):
 #     except Food.DoesNotExist:
 #         return Response({'error':'Food Item not found'}, status=404)
    
+
+
+
+@api_view(['GET'])
+def list_users(request):
+    users = User.objects.all().order_by('-id')
+    serializer = UserSerializer(users, many=True)
+
+    return Response(serializer.data)
+
+
+@api_view(['DELETE'])
+def delete_user(request, id):
+    try:
+        user = User.objects.get(id=id)
+        user.delete()
+        return Response({'message': 'User Deleted Successfully'}, status=200)
+    except Food.DoesNotExist:
+        return Response({'error':'User Item not found'}, status=404)
+   
+
+from django.utils.timezone import now, timedelta, make_aware
+from django.db.models import Sum, F, DateField
+from datetime import datetime
+@api_view(['GET'])
+def dashboard_metrics(request):
+    today = now().date()
+    start_week = today - timedelta(days=today.weekday()) 
+    start_month = today.replace(day=1)
+    start_year = today.replace(month=1, day=1)
+    
+    def get_sales_total(start_date):
+        aware_start = make_aware(datetime.combine(start_date, datetime.min.time()))
+        paid_orders = PaymentDetail.objects.filter(payment_date__gte=aware_start).values_list('order_number', flat=True)
+        # paid_orders = PaymentDetail.objects.filter(payment_date__gte=start_date).values_list('order_number', flat=True)
+        total = (Order.objects.filter(
+            order_number__in=paid_orders)
+            .annotate(total_price=F('food__item_price') * F('quantity'))
+            .aggregate(sale_amount=Sum('total_price'))['sale_amount'] or 0.0
+        )
+        return round(total, 2)
+    data = {
+        'total_orders': OrderAddress.objects.count(),
+        'new_orders': OrderAddress.objects.filter(order_final_status__isnull=True).count(),
+        'confirmed_orders': OrderAddress.objects.filter(order_final_status="Order Confirmed").count(),
+        'food_preparing': OrderAddress.objects.filter(order_final_status="Food being Prepared").count(),
+        'food_pickup': OrderAddress.objects.filter(order_final_status="Food Pickup").count(),
+        'food_delivered': OrderAddress.objects.filter(order_final_status="Food Delivered").count(),
+        'cancelled_orders': OrderAddress.objects.filter(order_final_status="Order Cancelled").count(),
+        'total_users': User.objects.count(),
+        'total_categories': Category.objects.count(),
+        'total_reviews': Review.objects.count(),
+        'total_wishlists': Wishlist.objects.count(),
+        'total_foods': Food.objects.count(),
+        'today_sales': get_sales_total(today),
+        'week_sales': get_sales_total(start_week),
+        'month_sales': get_sales_total(start_month),
+        'year_sales': get_sales_total(start_year),
+
+    }
+
+    return Response(data)
+
+
+from django.db.models import Sum, F, DecimalField
+from decimal import Decimal
+from collections import defaultdict
+from django.db.models.functions import TruncMonth, Coalesce, TruncWeek
+
+@api_view(['GET'])
+def monthly_sales_summary(request):
+    
+    #step 1=> total = sum(quantity * price)
+    
+    orders = (
+        Order.objects
+                    .filter(is_order_placed=True)
+                    .values('order_number')
+                    .annotate
+                        (total_price=Coalesce(Sum(F('food__item_price') * F('quantity'), 
+                        output_field=DecimalField(max_digits=12, decimal_places=2)),Decimal('0.00'))
+                        )
+    )
+                          
+        
+    
+    # step 2 =>
+    order_price_map={
+        o['order_number']: o['total_price'] for o in orders
+    }
+
+    # step 3 => month resolve
+    addresses = (
+        OrderAddress.objects
+                    .filter(order_number__in=order_price_map.keys())
+                    .annotate(month=TruncMonth('order_time'))
+                    .values('month', 'order_number')                   
+    )
+
+    # step 4 => monthly sum
+    month_totals = defaultdict(lambda: Decimal('0.00'))
+
+    for addr in addresses:
+        label = addr['month'].strftime('%b')
+        order_number = addr['order_number']
+        month_totals[label] += order_price_map.get(order_number, Decimal('0.00'))
+
+    result = [{'month': m, 'sales': total} for m, total in month_totals.items()]
+    return Response(result)
+
+
+
+@api_view(['GET'])
+def top_selling_foods(request):
+    
+    
+    top_foods = (
+        Order.objects
+                    .filter(is_order_placed=True)
+                    .values('food__item_name')
+                    .annotate
+                        (total_sold = Sum('quantity'))
+                    .order_by('-total_sold')[:5]
+    )
+                          
+    return Response(top_foods)
+
+
+@api_view(['GET'])
+def weekly_sales_summary(request):
+    
+    #step 1=> total = sum(quantity * price)
+    
+    orders = (
+        Order.objects
+                    .filter(is_order_placed=True)
+                    .values('order_number')
+                    .annotate
+                        (total_price=Coalesce(Sum(F('food__item_price') * F('quantity'), 
+                        output_field=DecimalField(max_digits=12, decimal_places=2)),Decimal('0.00'))
+                        )
+    )
+                          
+        
+    
+    # step 2 =>
+    order_price_map={
+        o['order_number']: o['total_price'] for o in orders
+    }
+
+    # step 3 => month resolve
+    addresses = (
+        OrderAddress.objects
+                    .filter(order_number__in=order_price_map.keys())
+                    .annotate(week=TruncWeek('order_time'))
+                    .values('week', 'order_number')                   
+    )
+
+    # step 4 => monthly sum
+    weekly_totals = defaultdict(lambda: Decimal('0.00'))
+
+    for addr in addresses:
+        label = addr['week'].strftime('Week %W')
+        order_number = addr['order_number']
+        weekly_totals[label] += order_price_map.get(order_number, Decimal('0.00'))
+
+    result = [{'week': w, 'sales': total} for w, total in weekly_totals.items()]
+    return Response(result)
+
+
+
+from django.db.models import Count
+@api_view(['GET'])
+def weekly_user_registrations(request):
+    
+    data = (
+        User.objects
+        .annotate(week=TruncWeek('reg_date'))
+        .values('week')
+        .annotate(new_users = Count('id'))
+        .order_by('week')              
+    )
+
+
+    result = [{'week': entry["week"].strftime('Week %W'), 'new_users': entry["new_users"]} for entry in data]
+    return Response(result)
+
+
+
+
+@api_view(['POST'])
+def add_to_wishlist(request):
+    user_id = request.data.get('user_id')
+    food_id = request.data.get('food_id')
+
+
+   
+    obj, created = Wishlist.objects.get_or_create(user_id=user_id, food_id=food_id)
+    if created:
+        return Response({'message': 'Added to Wishlist'}, status=201)
+    else:
+        # obj.delete()
+        return Response({'message': 'Already in Wishlist'}, status=400)
+
+
+
+@api_view(['POST'])
+def remove_from_wishlist(request):
+    user_id = request.data.get('user_id')
+    food_id = request.data.get('food_id')
+
+    try:
+        obj = Wishlist.objects.get(user_id=user_id, food_id=food_id)
+        obj.delete()
+        return Response({'message': 'Removed from Wishlist'}, status=200)
+    except Wishlist.DoesNotExist:
+        return Response({'message': 'Item not found in Wishlist'}, status=404)
+
+from .serializers import WishlistSerializer
+@api_view(['GET'])
+def get_from_wishlist(request, user_id):
+    wishlist_items = Wishlist.objects.filter(user_id=user_id)
+    serializer = WishlistSerializer(wishlist_items, many=True)
+    return Response(serializer.data)
+        
+
+from  .serializers import FoodTrackingSerializer
+@api_view(['GET'])
+def track_order(request, order_number):
+
+    sample_order = Order.objects.filter(order_number=order_number, is_order_placed=True).first()
+    if not sample_order:
+        return Response({'message':'Order not Found or not placed yet.'}, status=404)
+    tracking_entries = FoodTracking.objects.filter(order=sample_order)
+    serializer = FoodTrackingSerializer(tracking_entries, many=True)
+    return Response(serializer.data)
+        
+@api_view(['POST'])
+def cancel_order(request, order_number):
+    sample_order = Order.objects.filter(order_number=order_number, is_order_placed=True).first()
+    if not sample_order:
+        return Response({'message': 'Order not Found or not placed yet.'}, status=404)
+    
+    
+    # ✅ Read remark from request body (sent by frontend)
+    remark = request.data.get('remark')
+
+    FoodTracking.objects.create(
+        order=sample_order,
+        status='Order Cancelled',
+        remark=remark,
+        order_cancelled_by_user=True,
+    )
+
+    order_address = OrderAddress.objects.get(order_number=order_number)
+    order_address.order_final_status = 'Order Cancelled'
+    order_address.save()
+
+    return Response({'message': 'Order cancelled successfully.'}, status=200)
