@@ -51,6 +51,9 @@ urlpatterns = [
     path('wishlist/<int:user_id>/', get_from_wishlist),
     path('track_order/<str:order_number>/', track_order),
     path('cancel_order/<str:order_number>/', cancel_order),
+    path('reviews/add/<int:food_id>/', add_review),
+    path('reviews/<int:food_id>/', food_reviews),
+    path('review_edit/<int:id>/', review_detail),
 
 
 

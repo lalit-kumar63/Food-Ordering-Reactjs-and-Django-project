@@ -720,8 +720,6 @@ def add_to_wishlist(request):
     user_id = request.data.get('user_id')
     food_id = request.data.get('food_id')
 
-
-   
     obj, created = Wishlist.objects.get_or_create(user_id=user_id, food_id=food_id)
     if created:
         return Response({'message': 'Added to Wishlist'}, status=201)
@@ -764,23 +762,74 @@ def track_order(request, order_number):
         
 @api_view(['POST'])
 def cancel_order(request, order_number):
-    sample_order = Order.objects.filter(order_number=order_number, is_order_placed=True).first()
-    if not sample_order:
-        return Response({'message': 'Order not Found or not placed yet.'}, status=404)
-    
-    
-    # ✅ Read remark from request body (sent by frontend)
     remark = request.data.get('remark')
+    address = OrderAddress.objects.get(order_number=order_number)
 
+    sample_order = Order.objects.filter(order_number=order_number).first()
+    
     FoodTracking.objects.create(
         order=sample_order,
-        status='Order Cancelled',
         remark=remark,
+        status='Order Cancelled',
         order_cancelled_by_user=True,
     )
 
-    order_address = OrderAddress.objects.get(order_number=order_number)
-    order_address.order_final_status = 'Order Cancelled'
-    order_address.save()
+    address.order_final_status = 'Order Cancelled'
+    address.save()
 
     return Response({'message': 'Order cancelled successfully.'}, status=200)
+
+
+@api_view(['POST'])
+def add_review(request, food_id):
+    user_id = request.data.get('user_id')
+    rating = request.data.get('rating')
+    comment = request.data.get('comment')
+
+    try:
+        user = User.objects.get(id=user_id)
+        food = Food.objects.get(id=food_id)
+    except (User.DoesNotExist, Food.DoesNotExist):
+        return Response({"message": "User or Food not Found"}, status=404)
+    Review.objects.create(
+        user = user,
+        food = food,
+        rating = rating,
+        comment = comment
+    )
+    return Response({'message': 'Review Submitted'}, status=201)
+
+
+from .serializers import ReviewSerializer
+@api_view(['GET'])
+def food_reviews(request, food_id):
+
+    reviews = Review.objects.filter(food_id = food_id).order_by('-created_at')
+    serializer = ReviewSerializer(reviews, many=True)
+    return Response(serializer.data)
+        
+
+@api_view(['DELETE', 'PUT'])
+def review_detail(request, id):
+    try:
+        review = Review.objects.get(id = id)
+    except Review.DoesNotExist :
+        return Response({"message": "Review not Found"}, status=404)
+    
+    if request.method == 'DELETE':
+        review.delete()
+        return Response({"message": "Review Deleted Successfully."}, status=200)
+
+    if request.method == 'PUT':
+        data = {
+                "rating": request.data.get("rating", review.rating),
+                "comment": request.data.get("comment", review.comment),
+            }
+        
+        serializer = ReviewSerializer(review, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Review Updated Successfully."}, status=200)
+        
+        return Response(serializer.errors, status=400)
+        
