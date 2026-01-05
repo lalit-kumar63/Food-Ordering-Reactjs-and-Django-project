@@ -34,6 +34,7 @@ import FoodList from './pages/FoodList';
 import { WishlistProvider } from './context/WishlistContext';
 import Wishlist from './pages/Wishlist';
 import TrackOrder from './pages/TrackOrder';
+import ManageReviews from './pages/ManageReviews';
 
 
 function App() {
@@ -56,6 +57,7 @@ function App() {
             <Route path="/order-delivered" element={<FoodDelivered/>} />
             <Route path="/order-cancelled" element={<OrderCancelled/>} />
             <Route path="/all-orders" element={<AllOrders/>} />
+            <Route path="/manage-reviews" element={<ManageReviews/>} />
 
             <Route path="/order-report" element={<OrderReport/>} />
             <Route path="/admin-view-order-detail/:orderNumber" element={<ViewFoodOrder/>} />

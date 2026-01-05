@@ -1,4 +1,6 @@
-django
-django-cors-headers
+Django
 djangorestframework
+django-cors-headers
 Pillow
+psycopg2-binary
+python-dotenv

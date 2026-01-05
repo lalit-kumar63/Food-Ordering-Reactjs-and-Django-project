@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import '../styles/layout.css';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useLocation } from 'react-router-dom';
 
 const PublicLayout = ({children}) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -11,6 +12,7 @@ const PublicLayout = ({children}) => {
 
   const {cartCount, setCartCount} = useCart();
   const {wishlistCount, setWishlistCount} = useWishlist();
+  const location = useLocation();
 
   const navigate = useNavigate();
   const userId = localStorage.getItem("userId")
@@ -71,33 +73,33 @@ const PublicLayout = ({children}) => {
             <div className="collapse navbar-collapse" id="navbarSupportedContent">
               <ul className="navbar-nav ms-auto">
                 <li className="nav-item mx-1">
-                  <Link className="nav-link" to="/"><FaHome className='me-1' /> Home</Link>
+                  <Link className={`nav-link ${location.pathname ==="/" ? "active-nav-link" : ""}`} to="/"><FaHome className='me-1' /> Home</Link>
                 </li>
                 <li className="nav-item mx-1">
-                  <Link className="nav-link" to="/food_menu"><FaUtensils className='me-1' /> Menu</Link>
+                  <Link className={`nav-link ${location.pathname ==="/food_menu" ? "active-nav-link" : ""}`} to="/food_menu"><FaUtensils className='me-1' /> Menu</Link>
                 </li>
                 <li className="nav-item mx-1">
-                  <Link className="nav-link" to="/track"><FaTruck className='me-1' /> Track</Link>
+                  <Link className={`nav-link ${location.pathname ==="/track" ? "active-nav-link" : ""}`} to="/track"><FaTruck className='me-1' /> Track</Link>
                 </li>
                 {!isLoggedIn ? (
                   <>
                     <li className="nav-item mx-1">
-                      <Link className="nav-link" to="/register"><FaUserPlus className='me-1' /> Register</Link>
+                      <Link className={`nav-link ${location.pathname ==="/register" ? "active-nav-link" : ""}`} to="/register"><FaUserPlus className='me-1' /> Register</Link>
                     </li>
                     <li className="nav-item mx-1">
-                      <Link className="nav-link" to="/login"><FaSignInAlt className='me-1' /> Login</Link>
+                      <Link className={`nav-link ${location.pathname ==="/login" ? "active-nav-link" : ""}`} to="/login"><FaSignInAlt className='me-1' /> Login</Link>
                     </li>
                     <li className="nav-item mx-1">
-                      <Link className="nav-link" to="/admin-login"><FaUserShield className='me-1' /> Admin</Link>
+                      <Link className={`nav-link ${location.pathname ==="/admin-login" ? "active-nav-link" : ""}`} to="/admin-login"><FaUserShield className='me-1' /> Admin</Link>
                     </li>
                   </>
                 ) : (
                   <>
                     <li className="nav-item mx-1">
-                      <Link className="nav-link" to="/my-orders"><FaUser className='me-1' /> My Orders</Link>
+                      <Link className={`nav-link ${location.pathname ==="/my-orders" ? "active-nav-link" : ""}`} to="/my-orders"><FaUser className='me-1' /> My Orders</Link>
                     </li>
                     <li className="nav-item mx-1">
-                      <Link className="nav-link" to="/cart"><FaShoppingCart className='me-1' /> 
+                      <Link className={`nav-link ${location.pathname ==="/cart" ? "active-nav-link" : ""}`} to="/cart"><FaShoppingCart className='me-1' /> 
                         Carts
                         {cartCount > 0 && (
                           <span className="badge bg-danger ms-1">{cartCount}</span>
@@ -105,7 +107,7 @@ const PublicLayout = ({children}) => {
                       </Link>
                     </li>
                     <li className="nav-item mx-1">
-                      <Link className="nav-link" to="/wishlist"><FaHeart className='me-1' /> 
+                      <Link className={`nav-link ${location.pathname ==="/wishlist" ? "active-nav-link" : ""}`} to="/wishlist"><FaHeart className='me-1' /> 
                         Wishlist
                         {wishlistCount > 0 && (
                           <span className="badge bg-danger ms-1">{wishlistCount}</span>
@@ -117,8 +119,8 @@ const PublicLayout = ({children}) => {
                       <FaUserCircle className='me-1' /> {userName}
                       </a>
                       <ul className="dropdown-menu">
-                        <li><Link className="dropdown-item" to="/profile"><FaUser className='me-1' /> Profile</Link></li>
-                        <li><Link className="dropdown-item" to="/change-password"><FaCogs className='me-1' />Settings</Link></li>
+                        <li><Link className={`dropdown-item ${location.pathname ==="/profile" ? "active-dropdown" : ""}`} to="/profile"><FaUser className='me-1' /> Profile</Link></li>
+                        <li><Link className={`dropdown-item ${location.pathname ==="/change-password" ? "active-dropdown" : ""}`} to="/change-password"><FaCogs className='me-1' />Settings</Link></li>
                         <li><hr className="dropdown-divider"/></li>
                         <li><button className="dropdown-item" onClick={handleLogout}><FaSignOutAlt className='me-1' />Logout</button></li>
                       </ul>

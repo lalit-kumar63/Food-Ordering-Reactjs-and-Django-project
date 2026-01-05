@@ -9,6 +9,10 @@ const ManageCategory = () => {
 
     const [categories, setCategories] = useState([]);
     const [allCategories, setAllCategories] = useState([]);
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const categoriesPerPage = 5;
+
     const navigate = useNavigate();
     const adminUser = localStorage.getItem("adminUser");
 
@@ -59,6 +63,14 @@ const ManageCategory = () => {
         
     }
 
+    //Pagination logic
+    const indexOfLastCategory = currentPage * categoriesPerPage;
+    const indexOfFirstCategory = indexOfLastCategory - categoriesPerPage;
+    const currentCategories = categories.slice(indexOfFirstCategory, indexOfLastCategory);
+    const totalPages = Math.ceil(categories.length / categoriesPerPage);
+
+    const handlePageChange = (page) => setCurrentPage(page);
+
   return (
     <AdminLayout>
         <ToastContainer position='top-right' autoClose={2000}/>
@@ -91,7 +103,7 @@ const ManageCategory = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {categories.map((cat, index)=>(
+                    {currentCategories.map((cat, index)=>(
                     <tr key={cat.id}>
                         <td>{index+1}</td>
                         <td>{cat.category_name}</td>
@@ -108,6 +120,20 @@ const ManageCategory = () => {
                     ))}
                 </tbody>
             </table>
+
+            <div className='mt-3 d-flex justify-content-center'>
+                <nav>
+                    <ul className="pagination">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                            <li key={page} className={`page-item ${page === currentPage ? 'active' : ''}`}>
+                                <button className='page-link' onClick={() => handlePageChange(page)}>
+                                    {page}
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
+            </div>
 
         </div>
     </AdminLayout>

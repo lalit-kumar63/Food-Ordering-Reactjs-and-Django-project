@@ -21,11 +21,11 @@ const AdminHeader = ({toggleSidebar, sidebarOpen, newOrders}) => {
 
 
         <span className='navbar-brand fw-semibold'><i className='fas fa-utensils me-2'></i>Food Ordering System</span>
-        <button className='navbar-toggler border-0 ms-auto'>
+        <button className='navbar-toggler border-0 ms-auto' type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar">
             <FaBars/>
         </button>
 
-        <div className='collapse navbar-collapse'>
+        <div className='collapse navbar-collapse' id="adminNavbar">
             <ul className='navbar-nav ms-auto align-items-center gap-3'> 
                 <li className='nav-item position-relative'>
                     <button className='btn btn-outline-secondary position-relative' 

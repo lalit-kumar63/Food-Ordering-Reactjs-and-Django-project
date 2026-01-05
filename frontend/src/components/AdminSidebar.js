@@ -120,7 +120,7 @@ const AdminSidebar = () => {
           </div>
 
           <div className='list-group list-group-flush'>
-            <Link className='list-group-item list-group-item-action bg-dark text-white'>
+            <Link to="/manage-reviews" className='list-group-item list-group-item-action bg-dark text-white'>
               <FaStar className='icon-fix'/> Manage Reviews
             </Link>
           </div>

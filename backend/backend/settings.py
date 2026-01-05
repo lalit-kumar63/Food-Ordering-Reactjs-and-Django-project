@@ -78,12 +78,30 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+
+# sqlite3 database configuration (commented out)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+
+# PostgreSQL database configuration
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'FoodOrdering',
+#         'USER': 'latest_db',
+#         'PASSWORD': 'vinove@123',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#         'OPTIONS': {}
+#     }
+# }
+
+
 
 
 # Password validation

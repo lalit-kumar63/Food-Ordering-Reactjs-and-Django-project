@@ -40,6 +40,8 @@ urlpatterns = [
     path('users/', list_users),
     path('delete_user/<int:id>/', delete_user),
     path('dashboard_metrics/', dashboard_metrics),
+    path('all_reviews/', all_reviews),
+    path('delete_review/<int:id>/', delete_review),
 
 
     path('monthly_sales_summary/', monthly_sales_summary),
@@ -54,6 +56,7 @@ urlpatterns = [
     path('reviews/add/<int:food_id>/', add_review),
     path('reviews/<int:food_id>/', food_reviews),
     path('review_edit/<int:id>/', review_detail),
+    path('food_rating_summary/<int:food_id>/', food_rating_summary),
 
 
 

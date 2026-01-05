@@ -180,7 +180,7 @@ const FoodDetail = () => {
         setEditId(rev.id);
     }
 
-    if(!food) return <div>Loading...</div>
+    if(!food) return <div className='text-center mt-5'>Loading...</div>
 
   return (
     <PublicLayout>

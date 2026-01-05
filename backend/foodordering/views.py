@@ -833,3 +833,33 @@ def review_detail(request, id):
         
         return Response(serializer.errors, status=400)
         
+
+from django.db.models import Avg, Count
+@api_view(['GET'])
+def food_rating_summary(request, food_id):
+    reviews = Review.objects.filter(food_id = food_id)
+    rating_summary = reviews.values('rating').annotate(count=Count('rating')).order_by('-rating')
+    average = reviews.aggregate(average=Avg('rating'))['average'] or 0
+    total_reviews = reviews.count(),
+   
+    return Response({
+        'average': round(average, 1),
+        'total_reviews': total_reviews,
+        'breakdown': {entry['rating']: entry['count'] for entry in rating_summary}
+    })
+        
+
+@api_view(['GET'])
+def all_reviews(request):
+    reviews = Review.objects.select_related('user', 'food').order_by('-created_at')
+    serializer = ReviewSerializer(reviews, many=True)
+    return Response(serializer.data)
+
+@api_view(['DELETE'])
+def delete_review(request, id):
+    try:
+        reviews = Review.objects.get(id=id)
+        reviews.delete()
+        return Response({'message':'Review Deleted Successfully'}, status=200)
+    except Review.DoesNotExist:
+        return Response({'message':'Review not found'}, status=404)

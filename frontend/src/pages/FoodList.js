@@ -16,6 +16,8 @@ const FoodList = () => {
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(200);
 
+  const [sortBy, setSortBy] = useState('relevance'); // New state for sorting
+
   const [currentPage, setCurrentPage] = useState(1);
   const foodsPerPage = 9;
 
@@ -42,14 +44,41 @@ const FoodList = () => {
     applyFilters(search, selectedCategory);
   };
 
+  const sortFoods = (list, sortValue) => {
+    const sorted = [...list];
+    switch(sortValue) {
+      case "priceLowHigh":
+        sorted.sort((a, b) => a.item_price - b.item_price);
+        break;
+      case "priceHighLow":
+        sorted.sort((a, b) => b.item_price - a.item_price);
+        break;
+      case "nameAZ":
+        sorted.sort((a, b) => a.item_name.localeCompare(b.item_name));
+        break;
+      case "nameZA":
+        sorted.sort((a, b) => b.item_name.localeCompare(a.item_name));
+        break;
+      default:
+        // No sorting
+        break;
+    }
+    return sorted;
+  };
+
   const handleCategoryChange = (e) => {
     const category = e.target.value;
     setSelectedCategory(category);
     applyFilters(search, category);
   };
 
-  const applyFilters = (searchTerm, category) => {
+  const applyFilters = (searchTerm, category, priceMin, priceMax, sortOverride) => {
     let result = foods;
+
+    const min = typeof priceMin === 'number' ? priceMin : minPrice;
+    const max = typeof priceMax === 'number' ? priceMax : maxPrice;
+    const sortValue = sortOverride || sortBy;
+
     if (searchTerm) {
       result = result.filter(food =>
         food.item_name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -60,9 +89,9 @@ const FoodList = () => {
     }
     
     result = result.filter(food =>
-      food.item_price >= minPrice && food.item_price <= maxPrice
+      food.item_price >= min && food.item_price <= max
     );
-    
+    result = sortFoods(result, sortValue);
     setFilteredFoods(result);
     setCurrentPage(1);
   }
@@ -73,11 +102,29 @@ const FoodList = () => {
   const currentFoods = filteredFoods.slice(indexOfFirstFood, indexOfLastFood);
   const totalPages = Math.ceil(filteredFoods.length / foodsPerPage);
 
-  // const paginate = (pageNumber) => setCurrentPage(pageNumber);
-  const paginate = (pageNumber) => {
-    if (pageNumber >= 1 && pageNumber <= totalPages) {
-      setCurrentPage(pageNumber);
-    }
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  // const paginate = (pageNumber) => {
+  //   if (pageNumber >= 1 && pageNumber <= totalPages) {
+  //     setCurrentPage(pageNumber);
+  //   }
+  // };
+
+  const handleMinPriceInput = (e) => {
+    const value = Number(e.target.value);
+    setMinPrice(value);
+    applyFilters(search, selectedCategory, value, maxPrice);
+  };
+
+  const handleMaxPriceInput = (e) => {
+    const value = Number(e.target.value);
+    setMaxPrice(value);
+    applyFilters(search, selectedCategory, minPrice, value);
+  };
+
+  const handleSortChange = (e) => {
+    const value = e.target.value;
+    setSortBy(value);
+    applyFilters(search, selectedCategory, minPrice, maxPrice, value);
   };
 
   return (
@@ -113,6 +160,38 @@ const FoodList = () => {
           </div>
         </div>
 
+        <div className='card mb-3 border-0 shadow-sm'>
+          <div className='card-body py-2'>
+            <div className='row g-2'>
+              <div className='col-md-4'>
+                <label className='form-label small me-1'>Sort</label>
+                <select className='form-select form-select-sm' 
+                value={sortBy} onChange={handleSortChange}>
+                  <option value="relevance">Relevance</option>
+                  <option value="priceLowHigh">Price: Low to High</option>
+                  <option value="priceHighLow">Price: High to Low</option>
+                  <option value="nameAZ">Name: A to Z</option>
+                  <option value="nameZA">Name: Z to A</option>
+                </select>
+              </div>
+
+              <div className='col-md-4'>
+                <label className='form-label small me-1'>Min Price (₹)</label>
+                <input type='number' className='form-control form-control-sm' 
+                  value={minPrice} onChange={handleMinPriceInput} min="0" />
+              </div>
+
+              <div className='col-md-4'>
+                <label className='form-label small me-1'>Max Price (₹)</label>
+                <input type='number' className='form-control form-control-sm' 
+                  value={maxPrice} onChange={handleMaxPriceInput} min="0" />
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
         <div className="row mb-4">
           <div className="col-md-12">
             <label className='form-label fw-bold my-2'>
@@ -122,14 +201,28 @@ const FoodList = () => {
               range
               min={0}
               max={1000}
-              defaultValue={[minPrice, maxPrice]}
+              value={[minPrice, maxPrice]}
               onChange={(value) => {
+                const [min, max] = value;
                 setMinPrice(value[0]);
                 setMaxPrice(value[1]);
-                // applyFilters(search, selectedCategory);
+                applyFilters(search, selectedCategory, min, max);
               }}
-              onAfterChange={() => applyFilters(search, selectedCategory)}
-            />
+              // onAfterChange={() => applyFilters(search, selectedCategory)}
+            ></Slider>
+
+            <button className='btn btn-sm btn-outline-secondary w-100 mt-2' onClick={()=>{
+              setSearch('');
+              setSelectedCategory('All');
+              setMinPrice(0);
+              setMaxPrice(200);
+              setSortBy('relevance');
+              setFilteredFoods(foods);
+              setCurrentPage(1);
+              // applyFilters(search, selectedCategory, 0, 200);
+            }}>
+              <i className='fas fa-redo-alt me-1'></i>Clear Filter
+            </button>
           </div>            
         </div>
 

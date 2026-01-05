@@ -11,6 +11,8 @@ const Home = () => {
   const [foods, setFoods] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const {wishlistCount, setWishlistCount} = useWishlist();
+  const [ratings, setRatings] = useState({});
+  const [hovered, setHovered] = useState(null);
 
   const userId = localStorage.getItem('userId');
   const navigate = useNavigate();
@@ -37,6 +39,32 @@ const Home = () => {
     }
               
   },[userId]);
+
+
+  useEffect(()=>{
+             
+    const fetchAllRatings = async() => {
+      const allRating = {};
+      for(const food of foods){
+        try{
+          const response = await fetch(`http://127.0.0.1:8000/api/food_rating_summary/${food.id}/`);
+          if(response.ok){
+            const data = await response.json();
+            allRating[food.id] = data;
+          }
+        }
+        catch(error){
+          console.error(`Error fetching rating for food ID ${food.id}:`, error);
+        }
+      }
+      setRatings(allRating);
+    }
+
+    if(foods.length > 0){
+      fetchAllRatings();
+    }
+              
+  },[foods]);
 
   const toggleWishlist = async(food_id) => {
     if(!userId){
@@ -120,11 +148,58 @@ const Home = () => {
                                   onClick={() => toggleWishlist(food.id)}
                                 ></i>
                               </div>
-                              <div className='card-body'>
+                              <div className='card-body' >
                                   <h5 className='card-title'>
                                       <Link to={`/food/${food.id}`}>{food.item_name}</Link>
                                   </h5>
                                   <p className='card-text text-muted'>{food.item_description?.slice(0,40)}... </p>
+
+                                  {ratings[food.id] && (
+                                    <div className='mb-2 rating-summary-wrapper position-relative'
+                                      onMouseEnter={() => setHovered(food.id)}
+                                      onMouseLeave={() => setHovered(null)}
+                                    >
+                                      
+                                      <div>
+                                        <span className='text-warning'>
+                                          {Array(Math.round(ratings[food.id].average)).fill().map((_,i) => (
+                                            <i key={i} className='fas fa-star'></i>
+                                          ))}
+                                          {Array(5 - Math.round(ratings[food.id].average)).fill().map((_,i) => (
+                                            <i key={i} className='far fa-star'></i>
+                                          ))}
+                                        </span>
+                                        <small className='ms-2 text-muted'>
+                                          ({ratings[food.id].total_reviews} Reviews)
+                                        </small>
+                                      </div>
+
+                                      {hovered === food.id && ratings[food.id].breakdown && (
+                                        <div className='hover-popup p-3 border rounded shadow position-absolute bg-white'
+                                          style={{bottom : "100%", width : "100%", marginBottom : "10px", zIndex : "1000"}}>
+                                            {[5,4,3,2,1].map((star) => {
+                                              const count = ratings[food.id].breakdown[star] || 0;
+                                              const percentage = ratings[food.id].total_reviews ? 
+                                                (count / ratings[food.id].total_reviews) * 100  
+                                                  : 0;
+                                              return (
+                                                <div key={star} className='d-flex align-items-center mb-1'>
+                                                  <small className='me-2' style={{width:50}}>{star} star</small>
+                                                  <div className='progress flex-grow-1'>
+                                                    <div className='progress-bar bg-warning'
+                                                      style={{width: `${percentage}%`}}>
+                                                    </div>  
+                                                </div>
+                                                    <small className='ms-2'>{count}</small>                                                </div>
+                                              )
+                                            })}
+                                        </div>
+
+                                      )}
+
+                                    </div>
+                                  )}
+
                                   <div className='d-flex justify-content-between align-items-center'>
                                       <span className='fw-bold'>₹ {food.item_price}</span>
                                       
